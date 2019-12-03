@@ -93,11 +93,12 @@
                         //Error Message
                         noticeMessage(this, res.data, 'error');
                     }
-                }, msg => {
+                }).catch(msg => {
                     noticeMessage(this, msg, 'error');
                 })
             },
             getList: async function(data){
+                this.catalogList = []
                 /* eslint-disable */
                 for (let [index, chart] of data.entries()) {
                     if (
@@ -129,7 +130,7 @@
                                 } else {
                                     noticeMessage(this, res.data, 'error');
                                 }
-                            }, msg => {
+                            }).catch(msg => {
                                 noticeMessage(this, msg, 'error');
                             })
                         }else {

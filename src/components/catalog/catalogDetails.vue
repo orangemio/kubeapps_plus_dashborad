@@ -5,7 +5,7 @@
             <el-row :gutter="20">
                 <el-col :span="4">
                     <div class="grid-content bg-purple grid-img">
-                        <img v-show="catalog.icon" :src="catalog.icon | searchImage(catalog.icon)" class="image">
+                        <img v-show="catalog.icon" :src="catalog.icon" class="image">
                         <img v-show="!catalog.icon" src="../../assets/image/default.png" class="image">
                     </div>
                 </el-col>
@@ -100,7 +100,9 @@
     import getParamApi from "../utils/getParamApi";
     import noticeMessage from '../utils/noticeMessage.js';
     import enerty from '../entity/entity.js';
-
+    import common from '../common/common.js';
+    /* eslint-disable */
+    const httpFlag = 'http'
     export default {
         name: 'document',
         components: {
@@ -130,6 +132,7 @@
                 sources: chart.sources,
                 maintainers: chart.maintainers
             }
+            this.searchImg(this.catalog.icon)
             loading(this, 1000)
             this.init()
         },
@@ -144,15 +147,39 @@
                             } else {
                                 noticeMessage(this, res, 'error');
                             }
-                        }, msg => {
+                        }).catch(msg => {
                             noticeMessage(this, msg.data, 'error');
                         })
                     } else {
                         noticeMessage(this, res, 'error');
                     }
-                }, msg => {
+                }).catch(msg => {
                     noticeMessage(this, msg.data, 'error');
                 })
+            },
+            searchImg: async function(icon){
+                if(icon){
+                    if(icon.indexOf(httpFlag) == -1){
+                        await http(getParamApi(apiSetting.kubernetes.getImage, icon)).then(res => {
+                            if (res.status == 200) {
+                                icon = res.request.responseURL;
+                                if(!icon){
+                                    icon = common.searchIcon(this.catalog.name)
+                                }
+                                this.catalog.icon = icon
+                            } else {
+                                // noticeMessage(this, res.data, 'error');
+                            }
+                        }).catch(msg => {
+                            // noticeMessage(this, msg, 'error');
+                        })
+                    }else{
+                        this.catalog.icon = icon
+                    }
+                }else {
+                    icon = common.searchIcon(this.catalog.name)
+                    this.catalog.icon = icon
+                }
             },
             deploy() {
                 let params = {

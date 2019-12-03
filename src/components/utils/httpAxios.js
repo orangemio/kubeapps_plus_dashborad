@@ -1,7 +1,7 @@
 import axios from 'axios'
 import store from '../store/store.js'
 
-
+/* eslint-disable */
 // 请求时的拦截器
 axios.interceptors.request.use(config => {
         // 发送请求之前做一些处理,loading...
@@ -45,7 +45,7 @@ function errorState(response) {
 
 function successState(res) {
     //  ..隐藏loading
-    console.log(res)
+    // console.log(res)
     // console.log('成功，统一判断后端返回的错误码')
     // 统一判断后端返回的错误码
     // if (res.data.errCode == '000002') {
@@ -65,7 +65,7 @@ const httpServer = (opts, data) => {
         // baseURL,  // 基础 url 前缀
         url: opts.url,
         // 请求的地址
-        timeout: 10000,
+        timeout: 600000,
         // 超时时间, 单位毫秒
         params: Object.assign(Public, data),
         // get 请求时带的参数
