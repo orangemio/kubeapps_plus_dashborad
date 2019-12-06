@@ -1,5 +1,5 @@
 <template>
-  <div style="height: calc(100vh - 160px);" class="main_page">
+  <div style="height: calc(100vh - 160px);" class="main_page" v-loading.fullscreen.lock="loading" element-loading-text="Loading">
     <el-row>
       <el-col :span="4" :offset="2">
         <el-card :body-style="{ padding: '0px'}" style="text-align:left">
@@ -23,10 +23,10 @@
               :type="(this.status)?'success':'warning'"
             >{{(this.status)?'Ready':'Not Ready'}}</el-button>
           </el-col>
-          <el-col :offset="14" :span="3">
-            <el-button @click="getdebug">Upgrade</el-button>
-          </el-col>
-          <el-col :offset="1" :span="3">
+          <!-- <el-col :offset="14" :span="3">
+          <el-button @click="getdebug">Upgrade</el-button>-->
+          <!-- </el-col> -->
+          <el-col :offset="17" :span="3">
             <el-button type="danger" @click="dialogVisible = true">Delete</el-button>
           </el-col>
         </el-row>
@@ -118,7 +118,7 @@
       <el-switch v-model="purge" active-text="Purge release"></el-switch>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="deleteapp">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -146,6 +146,18 @@ export default {
     this.getResources();
   },
   methods: {
+    deleteapp() {
+      let baseurl = apiSetting.kubernetes.deleteapp;
+      baseurl.url =
+        baseurl.url +
+        this.$route.params.namespace +
+        "/releases/" +
+        this.$route.params.id;
+      if (this.purge) {
+        baseurl.url = baseurl.url + "?purge=true";
+      }
+      http(baseurl).then(this.$router.push("/applications"));
+    },
     getdebug() {
       console.log(this.deployments);
     },
@@ -177,22 +189,26 @@ export default {
           tabSize: 4 // 制表符设置为 4 个空格大小
         });
         jsyaml.loadAll(res.data.data.manifest, function(doc) {
-          console.log(doc);
-          if (doc.kind == "Secret") {
-            _this.secrets.push({
-              name: doc.metadata.name,
-              type: doc.type
-              // key: Base64.decode(doc.data["tls.crt"]),
-              // crt: Base64.decode(doc.data["tls.key"])
-            });
-          } else if (doc.kind != "Deployment") {
-            _this.resources.push({ name: doc.metadata.name, kind: doc.kind });
-          } else if (doc.kind == "Deployment") {
-            _this.services.push({ name: doc.metadata.name, kind: doc.kind });
+          try {
+            if (doc.kind == "Secret") {
+              _this.secrets.push({
+                name: doc.metadata.name,
+                type: doc.type
+                // key: Base64.decode(doc.data["tls.crt"]),
+                // crt: Base64.decode(doc.data["tls.key"])
+              });
+            } else if (doc.kind != "Deployment") {
+              _this.resources.push({ name: doc.metadata.name, kind: doc.kind });
+            } else if (doc.kind == "Deployment") {
+              _this.services.push({ name: doc.metadata.name, kind: doc.kind });
+            }
+          } catch (error) {
+            console.log(error)
           }
         });
       });
       //Deployments
+      console.log(this.services);
       for (let index = 0; index < this.services.length; index++) {
         var basicurl = {};
         basicurl.url =
@@ -203,7 +219,8 @@ export default {
         basicurl.method = "get";
         http(basicurl).then(res => {
           if (res.status == 200) {
-            res.data.status.availableReplicas > 0 && this.status
+            console.log(res);
+            res.data.status.availableReplicas > 0 || this.status
               ? (this.status = true)
               : (this.status = false);
             this.deployments.push({
@@ -223,7 +240,7 @@ export default {
       for (let index = 0; index < this.services.length; index++) {
         var _basicurl = {};
         _basicurl.url =
-          apiSetting.kubernetes.getdetailtwo.url +
+          apiSetting.kubernetes.getdetailthree.url +
           this.$route.params.namespace +
           "/services/" +
           this.services[index].name;
@@ -242,6 +259,7 @@ export default {
           });
         });
       }
+      this.loading = false;
     },
     open(data) {
       this.$alert(data, "密钥", {
@@ -275,6 +293,7 @@ export default {
       status: "",
       catalog: {},
       purge: false,
+      loading: true,
       themePath: "ace/theme/monokai", // 不导入 webpack-resolver，该模块路径会报错
       modePath: "ace/mode/yaml" // 同上
     };
