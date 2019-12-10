@@ -30,12 +30,19 @@
             <el-table-column :label="$t('message.actions')">
                 <template slot-scope="scope">
                     <el-button
+                            size="medium" icon="el-icon-remove-outline"
+                            @click="deleteSubmit(scope.row)">{{$t('message.delete')}}
+                    </el-button>
+                    <el-button
                             size="medium" icon="el-icon-refresh"
-                            @click="refresh(scope.$index, scope.row.metadata.name)">{{$t('message.refresh')}}
+                            @click="refresh()">{{$t('message.refresh')}}
                     </el-button>
                 </template>
             </el-table-column>
         </el-table>
+        <el-button class="gred-btn" type="success" icon="el-icon-circle-plus-outline" @click="addAppRepository()">
+            {{$t('message.add_app_repository')}}
+        </el-button>
         <el-button class="gred-btn" type="primary" icon="el-icon-refresh" @click="refreshAll()">
             {{$t('message.refresh_all')}}
         </el-button>
@@ -47,9 +54,11 @@
     import http from "../utils/httpAxios.js";
     import errorMessage from '../utils/errorMessage.js';
     import getParamApi from "../utils/getParamApi";
-    import loading from '../utils/loading.js';
-    import noticeMessage from '../utils/noticeMessage.js';
+    import noticeMessage from "../utils/noticeMessage";
+    // import loading from '../utils/loading.js';
+    // import noticeMessage from '../utils/noticeMessage.js';
 
+    /* eslint-disable */
     export default {
         data() {
             return {
@@ -58,14 +67,12 @@
             }
         },
         created() {
-            loading(this, 1000)
             this.init()
         },
         methods: {
             init: async function () {
-                await http(apiSetting.kubernetes.getAppRepositories).then(res => {
+                await http(getParamApi(apiSetting.kubernetes.getAppRepositories, sessionStorage.getItem('nameSpace'), 'apprepositories')).then(res => {
                     if (res.status == 200) {
-                        console.log(res)
                         this.tableData = res.data.items
                     } else {
                         //Error Message
@@ -75,27 +82,49 @@
                 })
                 this.loading = false
             },
-            refresh: async function(index, name) {
+            refresh: async function() {
                 this.loading = true
-                await http(getParamApi(apiSetting.kubernetes.getAppRepositories, name)).then(res => {
+                await this.init()
+            },
+            refreshAll: async function() {
+                this.loading = true
+                await this.init()
+            },
+            addAppRepository (){
+                let params = this.tableData
+                sessionStorage.setItem('repositories', JSON.stringify(params))
+                this.$router.push({name: 'addRepositories', params: params})
+            },
+            deleteSubmit: async function(row){
+                await this.$confirm('是否确定删除?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    noticeMessage(this, ' 正在删除，请稍等 ', 'success')
+                    this.loading = true
+                    this.deleteRepo(row)
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            deleteRepo: async function(row){
+                let name = row.metadata.name
+                let namespace = row.metadata.namespace
+                await http(getParamApi(apiSetting.kubernetes.delAppRepositorie, namespace, 'apprepositories', name), {}).then((res) => {
                     if (res.status == 200) {
-                        delete this.tableData[index]
-                        let repo = res.data
-                        this.tableData.push(repo)
+                        noticeMessage(this, name + ' 删除成功! ', 'success')
+                        this.refreshAll()
                     } else {
-                        //Error Message
-                        this.loading = false;
-                        errorMessage(this, res);
+                        noticeMessage(this, name + ' 删除失败: ' + res, 'error')
                     }
                 }).catch(msg => {
-                    noticeMessage(this, msg.data, 'error');
+                    noticeMessage(this, name + ' 请求失败: ' + msg.data, 'error')
                 })
                 this.loading = false
-            },
-            refreshAll() {
-                for (let [i, v] of this.tableData) {
-                    this.refresh(i, v.metadata.name)
-                }
             }
         }
     }

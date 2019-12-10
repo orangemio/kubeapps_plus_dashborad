@@ -1,14 +1,15 @@
 <template>
     <div class="footer">
         <img class="login_footer" src="../../assets/image/logo-white.png"/>
-        <div class="login_footer_p"><i class="iconfont">&#xea0a;</i></div>
+        <div class="login_footer_p">
+            <i class="iconfont">&#xea0a;</i>
+        </div>
     </div>
 </template>
 
 <script>
     export default {
         name: "basicFooter"
-
     };
 </script>
 

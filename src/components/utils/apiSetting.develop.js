@@ -25,8 +25,20 @@ const serviceModule = {
             method: 'get'
         },
         getAppRepositories: {
-            url: 'api/kube/apis/kubeapps.com/v1alpha1/namespaces/kubeapps/apprepositories',
+            url: 'api/kube/apis/kubeapps.com/v1alpha1/namespaces',
             method: 'get'
+        },
+        delAppRepositorie: {
+            url: 'api/kube/apis/kubeapps.com/v1alpha1/namespaces',
+            method: 'delete'
+        },
+        addAppRepositorie: {
+            url: 'api/kube/apis/kubeapps.com/v1alpha1/namespaces',
+            method: 'post'
+        },
+        setSecrets: {
+            url: 'api/kube/api/v1/namespaces',
+            method: 'post'
         },
         getServiceBrokers: {
             url: 'api/kube/apis/servicecatalog.k8s.io/v1beta1',
@@ -63,7 +75,11 @@ const serviceModule = {
         deleteapp:{
             url:'/rpc/api/tiller-deploy/v1/namespaces/',
             method:'DELETE'
-        }
+        },
+        getConfigJson:{
+            url:'api/config.json',
+            method:'get'
+        },
     }
 }
 const apiSetting = {...serviceModule}
